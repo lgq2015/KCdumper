@@ -146,7 +146,8 @@
 				TargetAttributes = {
 					684435511F6A63A4004ED3AF = {
 						CreatedOnToolsVersion = 8.3.3;
-						ProvisioningStyle = Manual;
+						DevelopmentTeam = UVWU8XCYJX;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -179,7 +180,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "/opt/MonkeyDev/bin/md --xcbp";
+			shellScript = "\n/opt/MonkeyDev/bin/md --xcbp\n\necho \"$TARGET_BUILD_DIR/$EXECUTABLE_NAME\"\n\n/opt/iOSOpenDev/bin/ldid -S\"$PROJECT_DIR/KCdumper/entitlements.xml\" \"$TARGET_BUILD_DIR/$EXECUTABLE_NAME\"\nldid -S/Users/devzkn/code/jb/KCdumper/KCdumper/entitlements.xml /Users/devzkn/Library/Developer/Xcode/DerivedData/KCdumper-dldyptxafmjomrfzjyebxrbepxsh/Build/Products/Debug-iphoneos/KCdumper\n# ldid -e /Users/devzkn/Library/Developer/Xcode/DerivedData/KCdumper-dldyptxafmjomrfzjyebxrbepxsh/Build/Products/Debug-iphoneos/KCdumper\nscp -r /Users/devzkn/Library/Developer/Xcode/DerivedData/KCdumper-dldyptxafmjomrfzjyebxrbepxsh/Build/Products/Debug-iphoneos/KCdumper  usb2222:/usr/bin/KCdumper\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -261,14 +262,15 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "iPhone Developer: dev@heylotus.com (EMMKXLZQ4E)";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				DEVELOPMENT_TEAM = 4TTMSU3C64;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = UVWU8XCYJX;
 				INSTALL_PATH = /usr/bin;
 				MonkeyDevBuildPackageOnAnyBuild = NO;
 				MonkeyDevClearUiCacheOnInstall = NO;
-				MonkeyDevCopyOnBuild = NO;
+				MonkeyDevCopyOnBuild = YES;
 				MonkeyDevDeviceIP = "";
-				MonkeyDevDevicePort = "";
-				MonkeyDevInstallOnAnyBuild = NO;
+				MonkeyDevDevicePort = 2222;
+				MonkeyDevInstallOnAnyBuild = YES;
 				MonkeyDevInstallOnProfiling = YES;
 				MonkeyDevkillProcessOnInstall = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -280,14 +282,16 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "iPhone Developer: dev@heylotus.com (EMMKXLZQ4E)";
-				DEVELOPMENT_TEAM = "";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = UVWU8XCYJX;
 				INSTALL_PATH = /usr/bin;
 				MonkeyDevBuildPackageOnAnyBuild = NO;
 				MonkeyDevClearUiCacheOnInstall = NO;
-				MonkeyDevCopyOnBuild = NO;
+				MonkeyDevCopyOnBuild = YES;
 				MonkeyDevDeviceIP = "";
-				MonkeyDevDevicePort = "";
-				MonkeyDevInstallOnAnyBuild = NO;
+				MonkeyDevDevicePort = 2222;
+				MonkeyDevInstallOnAnyBuild = YES;
 				MonkeyDevInstallOnProfiling = YES;
 				MonkeyDevkillProcessOnInstall = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -314,6 +318,7 @@
 				684435611F6A63A4004ED3AF /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

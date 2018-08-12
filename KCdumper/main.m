@@ -2,7 +2,7 @@
 #import <Security/Security.h>
 #import "sqlite3.h"
 
-
+////printToStdOut 不能使用中文
 void printToStdOut(NSString *format, ...) {
     va_list args;
     va_start(args, format);
@@ -22,6 +22,7 @@ void printUsage() {
 	printToStdOut(@"-i: Dump Identities\n");
 	printToStdOut(@"-c: Dump Certificates\n");
 	printToStdOut(@"-k: Dump Keys\n");
+    printToStdOut(@"-z: clean icloud acount data:  delete from ZACCOUNT where ZUSERNAME <> \"\"\n");
 }
 
 void dumpKeychainEntitlements() {
@@ -73,7 +74,7 @@ NSMutableArray *getCommandLineOptions(int argc, char **argv) {
 		return [arguments autorelease];
 	}
 	// 判断命令行中有其他字段 -a -e 等
-	while ((argument = getopt (argc, argv, "aegnickh")) != -1) {
+	while ((argument = getopt (argc, argv, "aegnickhz")) != -1) {
 		switch (argument) {
 			case 'a':
 				[arguments addObject:(id)kSecClassGenericPassword];
@@ -107,6 +108,11 @@ NSMutableArray *getCommandLineOptions(int argc, char **argv) {
 			case '?':
 			    printUsage();
 			 	exit(EXIT_FAILURE);
+            case 'z':
+            {//kncleanAccount3Sqlite
+                [arguments addObject:@"kncleanAccount3Sqlite"];
+                return [arguments autorelease];
+            }
 			default:
 				continue;
 		}
@@ -172,7 +178,17 @@ void printGenericPassword(NSDictionary *passwordItem) {
 	NSData* passwordData = [passwordItem objectForKey:(id)kSecValueData];
 	printToStdOut(@"Keychain Data: %@\n\n", [[NSString alloc] initWithData:passwordData encoding:NSUTF8StringEncoding]);
 	printToStdOut(@"kSecAttrSynchronizable:%@\n",[[passwordItem objectForKey:(id)kSecAttrSynchronizable] description]);
-	printToStdOut(@"kSecAttrSyncViewHint:%@",[[passwordItem objectForKey:(id)kSecAttrSyncViewHint] description]);
+    
+    //CFStringRef knkSecAttrSyncViewHint = [passwordItem objectForKey:(id)kSecAttrSyncViewHint];
+    printToStdOut(@"kSecAttrSyncViewHint:%@\n",@"Do not print temporarily");//Segmentation fault: 11
+
+    
+    //    @constant kSecAttrSyncViewHint Specifies a dictionary key whose value is
+//    a CFStringRef. This value is part of the primary key of each item, and
+  //  can be used to help distiguish Sync Views when defining their
+    //queries. iOS and sychronizable items only.
+    //printToStdOut(@"kSecAttrSyncViewHint:%@\n",@"Do not print temporarily");//Segmentation fault: 11
+//printToStdOut 不能使用中文
 }
 
 void printInternetPassword(NSDictionary *passwordItem) {
@@ -284,18 +300,67 @@ void printResultsForSecClass(NSArray *keychainItems, CFTypeRef kSecClassType) {
 	return;
 }
 
+#pragma mark - ********  清除帐号信息
+// https://kunnan.github.io/2018/08/09/electra1131/
+/*
+ sqlite-wal
+ sqlite-shm
+ wal is a temporary write-ahead logging file
+ shm is an index file for wal
+ 
+ ➜  KCdumper git:(master) ✗ scp -r  usb2222:/private/var/mobile/Library/Accounts ~/Accounts  使用https://github.com/sqlitebrowser/sqlitebrowser/releases进行分析
+ 
+ 2018-08-12 16:55:36.372 KCdumper[9434:1481488] ==============开始获取命令行配置===================
+ start kncleanAccount3Sqlite
+ kncleanAccount3Sqlite sqlite3_exec:delete from ZACCOUNT where ZUSERNAME <> ""
+ kncleanAccount3Sqlite :SQLITE_OK
+ */
+static
+void kncleanAccount3Sqlite() {// 获取同时删除/private/var/mobile/Library/Accounts 下的Accounts3.sqlite  sqlite-wal sqlite-shm
+    sqlite3 *database;
+    const char* path = "/private/var/mobile/Library/Accounts/Accounts3.sqlite";
+    
+    int databaseResult = sqlite3_open(path, &database);
+    if (databaseResult != SQLITE_OK) {
+        NSLog(@"kn创建／打开数据库%s失败,%d",path, databaseResult);
+        return;
+    }
+    const char *sql = "delete from ZACCOUNT where ZUSERNAME <> \"\"";
+    
+    char *error;
+    printToStdOut(@"kncleanAccount3Sqlite sqlite3_exec:%s \n",sql);//kncleanAccount3Sqlite sqlite3_exec:delete from ZACCOUNT where ZUSERNAME <> ""
+
+    int tableResult = sqlite3_exec(database, sql, NULL, NULL, &error);
+    if (tableResult != SQLITE_OK) {
+        NSLog(@"kn操作失败:%@",@(error));
+        printToStdOut(@"kncleanAccount3Sqlite fail:%@ \n",@(error));
+    }else {
+        printToStdOut(@"kncleanAccount3Sqlite :%@ \n",@"SQLITE_OK");
+    }
+    goto knclose;
+    
+knclose:
+    sqlite3_close(database);
+}
+
+//-rwxr-xr-x 1 root wheel 211584 Dec  7  2017 keychain_dumper*
+
 int main(int argc, char **argv) {
 	id pool=[NSAutoreleasePool new];
 	NSArray* arguments;
 	arguments = getCommandLineOptions(argc, argv);
 	if ([arguments indexOfObject:@"dumpEntitlements"] != NSNotFound) {
-		dumpKeychainEntitlements();
+		dumpKeychainEntitlements();//  只是dumpEntitlements 而已
 		exit(EXIT_SUCCESS);
-	}
+    }else if ([arguments indexOfObject:@"kncleanAccount3Sqlite"] != NSNotFound){
+        printToStdOut(@"start kncleanAccount3Sqlite \n");
+        kncleanAccount3Sqlite();
+        exit(EXIT_SUCCESS);
+    }
 	
 	NSLog(@"==============开始获取keychain数据库===================");
 	NSArray *keychainItems = nil;
-	for (id kSecClassType in (NSArray *) arguments) {
+	for (id kSecClassType in (NSArray *) arguments) {// 遍历要获取的信息
 		keychainItems = getKeychainObjectsForSecClass((CFTypeRef)kSecClassType);
 		printResultsForSecClass(keychainItems, (CFTypeRef)kSecClassType);
 		[keychainItems release];
