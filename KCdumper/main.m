@@ -314,13 +314,68 @@ void printResultsForSecClass(NSArray *keychainItems, CFTypeRef kSecClassType) {
  start kncleanAccount3Sqlite
  kncleanAccount3Sqlite sqlite3_exec:delete from ZACCOUNT where ZUSERNAME <> ""
  kncleanAccount3Sqlite :SQLITE_OK
+ 
+ 
+ 1、SQLite3中主要函数介绍
+
+ sqlite3_open(文件路径,sqlite3 **)：文件名若不存在，则会自动创建
+ 
+ sqlite3_close(sqlite3 *)：关闭数据库
+ 
+ sqlite3__finalize(sqlite3_stmt *pStmt): 释放数据库
+ 
+ sqlite3_errmsg(sqlite3*)：输出数据库错误
+ 
+ sqlite3__exec(sqlite3 *,const char *sql, sqlite3_callback,void *,char **errmsg)：
+ 参数1：open函数得到的指针。
+ 参数2：一条sql语句
+ 
+ 参数3：sqlite3_callback是回调，当这条语句执行后，sqlite3会调用你提供的这个函数，回调函数
+ 
+ 参数4：void *是自己提供的指针，可以传递任何指针到这里，这个参数最终会传到回调函数里面，如果不需要传到回调函数里面，则可以设置为NULL
+ 
+ 参数5：错误信息，当执行失败时，可以查阅这个指针
+
+
+ 
+ 1、sqlite3_prepare_v2(sqlite3 *db,const char *zSql, int nByte,sqlite3_stmt **ppStmt,const char **pzTail)：
+ 
+ 参数3：表示前面sql语句的长度，如果小于0，sqlite会自动计算它的长度
+ 
+ 参数4：sqlite3_stmt指针的指针，解析后的sql语句就放在该结构里
+ 
+ 参数5：一般设为0
+ 
+ 2、sqlite3_step(sqlite3_stmt*)：
+ 
+ 参数为sqlite3_prepare_v2中的sqlite3_stmt 返回SQLITE_ROW 表示成功
+ 
+ 3、sqlite3_bind_text(sqlite3_stmt*, int, const char*, int n, void()(void)):
+ 
+ 参数1：sqlite3_prepare_v2中的sqlite3_stmt
+ 
+ 参数2：对应行数
+ 
+ 参数3：对应行数的值
+ 
+ 参数4：对应行数的值的长度，小于0自动计算长度
+ 
+ 参数5：函数指针，主要处理特殊类型的析构
+ 
+ 4、sqlite3_key( sqlite3 *db, const void *pKey, int nKey)； 可使用使用第三方的SQLite扩展库，对数据库进行整体的加密。如：SQLCipher
+ 
+ 参数2：密钥
+ 
+ 参数3：密钥长度
+ https://github.com/tianjifou/CoreSQLite3
  */
 static
 void kncleanAccount3Sqlite() {// 获取同时删除/private/var/mobile/Library/Accounts 下的Accounts3.sqlite  sqlite-wal sqlite-shm
     sqlite3 *database;
     const char* path = "/private/var/mobile/Library/Accounts/Accounts3.sqlite";
     
-    int databaseResult = sqlite3_open(path, &database);
+    int databaseResult = sqlite3_open(path, &database);// sqlite3_open(文件路径,sqlite3 **)：文件名若不存在，则会自动创建
+
     if (databaseResult != SQLITE_OK) {
         NSLog(@"kn创建／打开数据库%s失败,%d",path, databaseResult);
         return;
@@ -330,7 +385,11 @@ void kncleanAccount3Sqlite() {// 获取同时删除/private/var/mobile/Library/A
     char *error;
     printToStdOut(@"kncleanAccount3Sqlite sqlite3_exec:%s \n",sql);//kncleanAccount3Sqlite sqlite3_exec:delete from ZACCOUNT where ZUSERNAME <> ""
 
-    int tableResult = sqlite3_exec(database, sql, NULL, NULL, &error);
+    int tableResult = sqlite3_exec(database, sql, NULL, NULL, &error);// 参数1：open函数得到的指针。参数2：一条sql语句；参数3：sqlite3_callback是回调，当这条语句执行后，sqlite3会调用你提供的这个函数，回调函数；参数4：void *是自己提供的指针，可以传递任何指针到这里，这个参数最终会传到回调函数里面，如果不需要传到回调函数里面，则可以设置为NULL；参数5：错误信息，当执行失败时，可以查阅这个指针
+    
+
+
+
     if (tableResult != SQLITE_OK) {
         NSLog(@"kn操作失败:%@",@(error));
         printToStdOut(@"kncleanAccount3Sqlite fail:%@ \n",@(error));
@@ -340,7 +399,8 @@ void kncleanAccount3Sqlite() {// 获取同时删除/private/var/mobile/Library/A
     goto knclose;
     
 knclose:
-    sqlite3_close(database);
+    sqlite3_close(database);// sqlite3_close(sqlite3 *)：关闭数据库
+
 }
 
 //-rwxr-xr-x 1 root wheel 211584 Dec  7  2017 keychain_dumper*
